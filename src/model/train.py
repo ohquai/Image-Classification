@@ -1,4 +1,14 @@
 # -*- coding:utf-8 -*-
+"""
+########################################################################################
+# Author:chengteng, 2018.01.26                                                         #
+# VGG16 implementation in keras with TensorFlow backend                                #
+# testing data is Cifar10                                                              #
+# Github: https://github.com/ohquai/Image-Classification                               #
+# vgg intro: http://www.cs.toronto.edu/~frossard/post/vgg16/                           #
+# Model from https://gist.github.com/ksimonyan/211839e770f7b538e2d8#file-readme-md     #
+########################################################################################
+"""
 import os
 import numpy as np
 
@@ -12,20 +22,20 @@ from src.data.data import read_data
 
 # paths
 path = 'D:/Project/cifar/cifar10/'
-model_path = path + '/models/cifar10.h5'
-submission_path = path + '/submissions/sub.csv'
+model_path = path + 'models/'
+submission_path = path + 'submissions/sub.csv'
 
 # coefficient
 n_classes = 10
 nb_epoch = 10
+batch_size = 64
 nb_aug = 5
 lr = 0.001
 
 # data
 img_width, img_height = 32, 32
-batch_size = 64
 
-# The data, shuffled and split between train and test sets:
+# read cifar10 data (from net and from local) and split between train and test sets:
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 (x_train, y_train), (x_test, y_test) = read_data(path)
 
@@ -36,28 +46,22 @@ x_test = x_test.astype('float32')/255
 y_train = to_categorical(y_train, n_classes)
 y_test = to_categorical(y_test, n_classes)
 
-
-
-
 vgg = Vgg16BN(size=(img_width, img_height), n_classes=n_classes, batch_size=batch_size, lr=lr)
 model = vgg.model
 model.summary()
 
-# info_string = "{0}x{1}_{2}epoch_{3}aug_{4}lr_vgg16-bn".format(img_width, img_height, nb_epoch, nb_aug, lr)
-# ckpt_fn = model_path + '{val_loss:.2f}-loss_' + info_string + '.h5'
-#
-# ckpt = ModelCheckpoint(filepath=ckpt_fn,
-#                       monitor='val_loss',
-#                       save_best_only=True,
-#                       save_weights_only=True)
-#
+info_string = "{0}x{1}_{2}epoch_{3}aug_vgg16-bn".format(img_width, img_height, nb_epoch, nb_aug)
+ckpt_fn = model_path + '{val_loss:.2f}-loss_' + info_string + '.h5'
+
+ckpt = ModelCheckpoint(filepath=ckpt_fn, monitor='val_loss', save_best_only=True, save_weights_only=True)
 # vgg.fit(train_path, valid_path,
 #           nb_trn_samples=nb_train_samples,
 #           nb_val_samples=nb_valid_samples,
 #           nb_epoch=nb_epoch,
 #           callbacks=[ckpt],
 #           aug=nb_aug)
-#
+vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
+
 # # generate predictions
 # for aug in range(nb_aug):
 #     print("Generating predictions for Augmentation {0}...",format(aug+1))

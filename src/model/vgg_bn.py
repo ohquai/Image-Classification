@@ -34,7 +34,7 @@ class Vgg16BN():
         for i in range(layers):
             model.add(ZeroPadding2D((1, 1)))
             model.add(Convolution2D(filters, (3, 3), activation='relu'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2), padding="same"))
 
     def FCBlock(self):
         model = self.model
@@ -45,6 +45,8 @@ class Vgg16BN():
     def build(self, ft=True):
         model = self.model = Sequential()
         model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+        # self.model = Sequential()
+        # self.model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
 
         self.ConvBlock(2, 64)
         self.ConvBlock(2, 128)
@@ -57,12 +59,19 @@ class Vgg16BN():
         self.FCBlock()
         model.add(Dense(self.n_classes, activation='softmax'))
 
-        model.load_weights(self.weights_file)
+        # model.load_weights(self.weights_file)
 
         if ft:
             self.finetune()
 
         self.compile()
+
+    def load_weights(self, weight_file, sess):
+        weights = np.load(weight_file)
+        keys = sorted(weights.keys())
+        for i, k in enumerate(keys):
+            print (i, k, np.shape(weights[k]))
+            sess.run(self.parameters[i].assign(weights[k]))
 
     def finetune(self):
         model = self.model
@@ -74,22 +83,22 @@ class Vgg16BN():
     def compile(self):
         self.model.compile(optimizer=Adam(lr=self.lr), loss='categorical_crossentropy', metrics=['accuracy'])
 
-    def fit(self, trn_path, val_path, nb_trn_samples, nb_val_samples, nb_epoch=1, callbacks=None, aug=False):
-        if aug:
-            train_datagen = ImageDataGenerator(rotation_range=10, width_shift_range=0.05, zoom_range=0.05,
-                                               channel_shift_range=10, height_shift_range=0.05, shear_range=0.05,
-                                               horizontal_flip=True)
-        else:
-            train_datagen = ImageDataGenerator()
-
-        trn_gen = train_datagen.flow_from_directory(trn_path, target_size=self.size, batch_size=self.batch_size,
-                                                      class_mode='categorical', shuffle=True)
-
-        val_gen = ImageDataGenerator().flow_from_directory(val_path, target_size=self.size, batch_size=self.batch_size,
-                                                           class_mode='categorical', shuffle=True)
-
-        self.model.fit_generator(trn_gen, samples_per_epoch=nb_trn_samples, nb_epoch=nb_epoch, verbose=2,
-                validation_data=val_gen, nb_val_samples=nb_val_samples, callbacks=callbacks)
+    # def fit(self, trn_path, val_path, nb_trn_samples, nb_val_samples, nb_epoch=1, callbacks=None, aug=False):
+    #     if aug:
+    #         train_datagen = ImageDataGenerator(rotation_range=10, width_shift_range=0.05, zoom_range=0.05,
+    #                                            channel_shift_range=10, height_shift_range=0.05, shear_range=0.05,
+    #                                            horizontal_flip=True)
+    #     else:
+    #         train_datagen = ImageDataGenerator()
+    #
+    #     trn_gen = train_datagen.flow_from_directory(trn_path, target_size=self.size, batch_size=self.batch_size,
+    #                                                   class_mode='categorical', shuffle=True)
+    #
+    #     val_gen = ImageDataGenerator().flow_from_directory(val_path, target_size=self.size, batch_size=self.batch_size,
+    #                                                        class_mode='categorical', shuffle=True)
+    #
+    #     self.model.fit_generator(trn_gen, samples_per_epoch=nb_trn_samples, nb_epoch=nb_epoch, verbose=2,
+    #             validation_data=val_gen, nb_val_samples=nb_val_samples, callbacks=callbacks)
 
     def test(self, test_path, nb_test_samples, aug=False):
         if aug:
