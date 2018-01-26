@@ -3,11 +3,11 @@ import numpy as np
 
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
-from keras.layers.core import Flatten, Dense, Dropout, Lambda
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
+from keras.layers import Flatten, Dense, Dropout, Lambda
+from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
-
+from time import sleep
 
 vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32).reshape((3,1,1))
 def vgg_preprocess(x):
@@ -18,13 +18,22 @@ def vgg_preprocess(x):
 class Vgg16BN():
     """The VGG 16 Imagenet model with Batch Normalization for the Dense Layers"""
 
-    def __init__(self, size=(224, 224), n_classes=2, lr=0.001, batch_size=64):
+    def __init__(self, size=(32, 32), n_classes=10, lr=0.001, batch_size=64):
         self.weights_file = 'vgg16_bn.h5'  # download from: http://www.platform.ai/models/
         self.size = size
         self.n_classes = n_classes
         self.lr = lr
         self.batch_size = batch_size
-        self.build()
+        # self.build_vgg()
+        # self.build_vgg_simple()
+        self.build_simple_net()
+
+    def load_weights(self, weight_file, sess):
+        weights = np.load(weight_file)
+        keys = sorted(weights.keys())
+        for i, k in enumerate(keys):
+            print(i, k, np.shape(weights[k]))
+            sess.run(self.parameters[i].assign(weights[k]))
 
     def predict(self, data):
         return self.model.predict(data)
@@ -33,20 +42,20 @@ class Vgg16BN():
         model = self.model
         for i in range(layers):
             model.add(ZeroPadding2D((1, 1)))
-            model.add(Convolution2D(filters, (3, 3), activation='relu'))
+            model.add(Conv2D(filters, (3, 3), activation='relu'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2), padding="same"))
 
-    def FCBlock(self):
+    def FCBlock(self, n_dense, p_dropout):
         model = self.model
-        model.add(Dense(4096, activation='relu'))
+        model.add(Dense(n_dense, activation='relu'))
         model.add(BatchNormalization())
-        model.add(Dropout(0.5))
+        model.add(Dropout(p_dropout))
 
-    def build(self, ft=True):
+    def build_vgg(self, ft=True):
+        # model = self.model = Sequential()
+        # model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
         model = self.model = Sequential()
         model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
-        # self.model = Sequential()
-        # self.model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
 
         self.ConvBlock(2, 64)
         self.ConvBlock(2, 128)
@@ -55,8 +64,9 @@ class Vgg16BN():
         self.ConvBlock(3, 512)
 
         model.add(Flatten())
-        self.FCBlock()
-        self.FCBlock()
+        self.FCBlock(4096, 0.5)
+        self.FCBlock(4096, 0.5)
+
         model.add(Dense(self.n_classes, activation='softmax'))
 
         # model.load_weights(self.weights_file)
@@ -66,12 +76,57 @@ class Vgg16BN():
 
         self.compile()
 
-    def load_weights(self, weight_file, sess):
-        weights = np.load(weight_file)
-        keys = sorted(weights.keys())
-        for i, k in enumerate(keys):
-            print (i, k, np.shape(weights[k]))
-            sess.run(self.parameters[i].assign(weights[k]))
+    def build_vgg_simple(self, ft=True):
+        model = self.model = Sequential()
+        model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+
+        self.ConvBlock(2, 32)
+        self.ConvBlock(2, 64)
+
+        model.add(Flatten())
+        self.FCBlock(1024, 0.25)
+        self.FCBlock(256, 0.25)
+        model.add(Dense(self.n_classes, activation='softmax'))
+
+        if ft:
+            self.finetune()
+
+        self.compile()
+
+    def build_simple_net(self):
+        model = self.model = Sequential()
+        model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+
+        # model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=x_train.shape[1:]))
+        # model.add(ZeroPadding2D((1, 1)))
+        model.add(Conv2D(32, (3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
+        # model.add(Dropout(0.25))
+        print(model.summary())
+        # model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=x_train.shape[1:]))
+        # model.add(ZeroPadding2D((1, 1)))
+        model.add(Conv2D(32, (3, 3), activation='relu'))
+        model.add(AveragePooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
+        # model.add(Dropout(0.25))
+        print(model.summary())
+
+        # model.add(ZeroPadding2D((1, 1)))
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(AveragePooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
+        # model.add(Dropout(0.25))
+        print(model.summary())
+
+        model.add(Flatten())
+
+        model.add(Dense(64, activation='relu'))
+        # model.add(Dropout(0.5))
+
+        model.add(Dense(self.n_classes, activation='softmax'))
+
+        # if ft:
+        #     self.finetune()
+
+        self.compile()
 
     def finetune(self):
         model = self.model

@@ -20,6 +20,17 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 from src.data.data import read_data
 
+def data_preprocess(x_train, y_train, x_test, y_test):
+    # zero-scale for image
+    x_train = x_train.astype('float32') / 255
+    x_test = x_test.astype('float32') / 255
+
+    # Convert class vectors to binary class matrices.
+    y_train = to_categorical(y_train, n_classes)
+    y_test = to_categorical(y_test, n_classes)
+
+    return x_train, y_train, x_test, y_test
+
 # paths
 path = 'D:/Project/cifar/cifar10/'
 model_path = path + 'models/'
@@ -39,13 +50,10 @@ img_width, img_height = 32, 32
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 (x_train, y_train), (x_test, y_test) = read_data(path)
 
-x_train = x_train.astype('float32')/255
-x_test = x_test.astype('float32')/255
+# data pre-process, include scale, categorical etc.
+x_train, y_train, x_test, y_test = data_preprocess(x_train, y_train, x_test, y_test)
 
-# Convert class vectors to binary class matrices.
-y_train = to_categorical(y_train, n_classes)
-y_test = to_categorical(y_test, n_classes)
-
+# get model structure
 vgg = Vgg16BN(size=(img_width, img_height), n_classes=n_classes, batch_size=batch_size, lr=lr)
 model = vgg.model
 model.summary()
