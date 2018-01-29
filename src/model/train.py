@@ -68,6 +68,7 @@ ckpt = ModelCheckpoint(filepath=ckpt_fn, monitor='val_loss', save_best_only=True
 #           nb_epoch=nb_epoch,
 #           callbacks=[ckpt],
 #           aug=nb_aug)
+print(x_train.shape)
 vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
 
 # # generate predictions
@@ -97,3 +98,7 @@ vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verb
 #             print(i, '/', nb_test_samples)
 #         f.write('%s,%s\n' % (os.path.basename(image_name).replace('.jpg', ''), (pred[1])))
 #     print("Done.")
+
+# 0.25 dropout
+# 49984/50000 [============================>.] - ETA: 0s - loss: 0.9163 - acc: 0.6773
+# 50000/50000 [==============================] - 256s 5ms/step - loss: 0.9162 - acc: 0.6773 - val_loss: 0.8989 - val_acc: 0.6852

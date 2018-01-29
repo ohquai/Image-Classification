@@ -10,8 +10,9 @@ from keras.preprocessing.image import ImageDataGenerator
 from time import sleep
 
 vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32).reshape((3,1,1))
+# vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32)
 def vgg_preprocess(x):
-    x = x - vgg_mean
+    # x = x - vgg_mean
     return x[:, ::-1] # reverse axis rgb->bgr
 
 
@@ -55,8 +56,10 @@ class Vgg16BN():
         # model = self.model = Sequential()
         # model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
         model = self.model = Sequential()
-        model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+        # model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+        model.add(Lambda(vgg_preprocess, input_shape=(3,)+self.size))
 
+        # 这边展示的16层的VGG，还有19层的，即512个filter size的层叠加4层
         self.ConvBlock(2, 64)
         self.ConvBlock(2, 128)
         self.ConvBlock(3, 256)
@@ -66,6 +69,7 @@ class Vgg16BN():
         model.add(Flatten())
         self.FCBlock(4096, 0.5)
         self.FCBlock(4096, 0.5)
+        print(model.summary())
 
         model.add(Dense(self.n_classes, activation='softmax'))
 
@@ -97,29 +101,25 @@ class Vgg16BN():
         model = self.model = Sequential()
         model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
 
-        # model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=x_train.shape[1:]))
-        # model.add(ZeroPadding2D((1, 1)))
         model.add(Conv2D(32, (3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
-        # model.add(Dropout(0.25))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
         print(model.summary())
-        # model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=x_train.shape[1:]))
-        # model.add(ZeroPadding2D((1, 1)))
+
         model.add(Conv2D(32, (3, 3), activation='relu'))
-        model.add(AveragePooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
+        model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
         # model.add(Dropout(0.25))
         print(model.summary())
 
         # model.add(ZeroPadding2D((1, 1)))
         model.add(Conv2D(64, (3, 3), activation='relu'))
-        model.add(AveragePooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"))
+        model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
         # model.add(Dropout(0.25))
         print(model.summary())
 
         model.add(Flatten())
 
         model.add(Dense(64, activation='relu'))
-        # model.add(Dropout(0.5))
+        # model.add(Dropout(0.25))
 
         model.add(Dense(self.n_classes, activation='softmax'))
 
