@@ -106,14 +106,12 @@ class Vgg16BN():
         print(model.summary())
 
         model.add(Conv2D(32, (3, 3), activation='relu'))
-        model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
-        # model.add(Dropout(0.25))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
         print(model.summary())
 
         # model.add(ZeroPadding2D((1, 1)))
         model.add(Conv2D(64, (3, 3), activation='relu'))
-        model.add(AveragePooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
-        # model.add(Dropout(0.25))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
         print(model.summary())
 
         model.add(Flatten())
