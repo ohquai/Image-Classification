@@ -15,10 +15,12 @@ import numpy as np
 from glob import glob
 from shutil import copyfile
 from src.model.vgg_bn import Vgg16BN
-from keras.callbacks import ModelCheckpoint
+from src.data.data import read_data
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.datasets import cifar10
 from keras.utils import to_categorical
-from src.data.data import read_data
+from matplotlib import pyplot as plt
+
 
 def data_preprocess(x_train, y_train, x_test, y_test):
     # zero-scale for image
@@ -30,6 +32,29 @@ def data_preprocess(x_train, y_train, x_test, y_test):
     y_test = to_categorical(y_test, n_classes)
 
     return x_train, y_train, x_test, y_test
+
+
+def show_model_effect(history):
+    # show the data in history
+    print(history.history.keys())
+
+    # summarize history for accuracy
+    plt.plot(history.history["acc"])
+    plt.plot(history.history["val_acc"])
+    plt.title("Model accuracy")
+    plt.ylabel("accuracy")
+    plt.xlabel("epoch")
+    plt.legend(["train", "test"], loc="upper left")
+
+    # summarize history for loss
+    plt.plot(history.history["loss"])
+    plt.plot(history.history["val_loss"])
+    plt.title("Model loss")
+    plt.ylabel("loss")
+    plt.xlabel("epoch")
+    plt.legend(["train", "test"], loc="upper left")
+    plt.savefig("Performance:" + str(score[1]) + ".jpg")
+
 
 # paths
 path = 'D:/Project/cifar/cifar10/'
@@ -62,14 +87,24 @@ info_string = "{0}x{1}_{2}epoch_{3}aug_vgg16-bn".format(img_width, img_height, n
 ckpt_fn = model_path + '{val_loss:.2f}-loss_' + info_string + '.h5'
 
 ckpt = ModelCheckpoint(filepath=ckpt_fn, monitor='val_loss', save_best_only=True, save_weights_only=True)
-# vgg.fit(train_path, valid_path,
-#           nb_trn_samples=nb_train_samples,
-#           nb_val_samples=nb_valid_samples,
-#           nb_epoch=nb_epoch,
-#           callbacks=[ckpt],
-#           aug=nb_aug)
-print(x_train.shape)
-vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
+early_stopping = EarlyStopping(monitor='val_loss', patience=2)
+history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
+# vgg.fit(train_path, valid_path, nb_trn_samples=nb_train_samples, nb_val_samples=nb_valid_samples, nb_epoch=nb_epoch, callbacks=[ckpt], aug=nb_aug)
+
+score = vgg.evaluate(x_test, y_test, verbose=1)
+
+print("====================================")
+print("====================================")
+print(score[0])
+print(score[1])
+print("====================================")
+print("====================================")
+
+# save model
+# model.save(path+"my_model"+str(score[1])+".h5")
+
+# show model effect
+show_model_effect(history)
 
 # # generate predictions
 # for aug in range(nb_aug):

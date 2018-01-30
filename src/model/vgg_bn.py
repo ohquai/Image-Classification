@@ -7,6 +7,7 @@ from keras.layers import Flatten, Dense, Dropout, Lambda
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
+from keras.layers.normalization import BatchNormalization
 from time import sleep
 
 vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32).reshape((3,1,1))
@@ -20,14 +21,18 @@ class Vgg16BN():
     """The VGG 16 Imagenet model with Batch Normalization for the Dense Layers"""
 
     def __init__(self, size=(32, 32), n_classes=10, lr=0.001, batch_size=64):
-        self.weights_file = 'vgg16_bn.h5'  # download from: http://www.platform.ai/models/
+        self.path = 'D:/Project/cifar/cifar10/'
+        self.weights_file = self.path+'vgg16_bn.h5'  # download from: http://www.platform.ai/models/
         self.size = size
         self.n_classes = n_classes
         self.lr = lr
         self.batch_size = batch_size
         # self.build_vgg()
         # self.build_vgg_simple()
-        self.build_simple_net()
+        # self.build_simple_net()
+        self.build_net_84()
+
+        self.save_model()
 
     def load_weights(self, weight_file, sess):
         weights = np.load(weight_file)
@@ -126,6 +131,44 @@ class Vgg16BN():
 
         self.compile()
 
+    def build_net_84(self):
+        model = self.model = Sequential()
+        model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
+        model.add(BatchNormalization())
+
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.5))
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.5))
+
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same"))
+        model.add(BatchNormalization())
+
+        print(model.summary())
+
+        model.add(Flatten())
+
+        model.add(Dense(512, activation='relu'))
+        model.add(Dropout(0.5))
+
+        model.add(Dense(self.n_classes, activation='softmax'))
+
+        # if ft:
+        #     self.finetune()
+
+        self.compile()
+
     def finetune(self):
         model = self.model
         model.pop()
@@ -165,3 +208,7 @@ class Vgg16BN():
                                                     class_mode=None, shuffle=False)
 
         return self.model.predict_generator(test_gen, val_samples=nb_test_samples), test_gen.filenames
+
+    def save_model(self):
+        model = self.model
+        model.save(self.weights_file)
