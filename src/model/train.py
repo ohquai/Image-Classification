@@ -53,7 +53,7 @@ def show_model_effect(history):
     plt.ylabel("loss")
     plt.xlabel("epoch")
     plt.legend(["train", "test"], loc="upper left")
-    plt.savefig("Performance:" + str(score[1]) + ".jpg")
+    plt.savefig("Performance.jpg")
 
 
 # paths
@@ -91,12 +91,12 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=2)
 history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
 # vgg.fit(train_path, valid_path, nb_trn_samples=nb_train_samples, nb_val_samples=nb_valid_samples, nb_epoch=nb_epoch, callbacks=[ckpt], aug=nb_aug)
 
-score = vgg.evaluate(x_test, y_test, verbose=1)
+score = vgg.model.evaluate(x_test, y_test, verbose=1)
 
 print("====================================")
 print("====================================")
-print(score[0])
-print(score[1])
+print("val_loss:{0}".format(score[0]))
+print("val_acc :{0}".format(score[1]))
 print("====================================")
 print("====================================")
 
@@ -151,5 +151,5 @@ show_model_effect(history)
 # 50000/50000 [==============================] - 1738s 35ms/step - loss: 0.7744 - acc: 0.7281 - val_loss: 0.6897 - val_acc: 0.7623
 
 # 78%准确率的结果
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.6863 - acc: 0.7577
-# 50000/50000 [==============================] - 617s 12ms/step - loss: 0.6862 - acc: 0.7578 - val_loss: 0.8625 - val_acc: 0.7061
+# 49984/50000 [============================>.] - ETA: 0s - loss: 0.6131 - acc: 0.7830
+# 50000/50000 [==============================] - 568s 11ms/step - loss: 0.6131 - acc: 0.7830 - val_loss: 0.8148 - val_acc: 0.7245

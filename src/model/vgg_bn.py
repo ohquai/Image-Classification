@@ -27,10 +27,10 @@ class Vgg16BN():
         self.n_classes = n_classes
         self.lr = lr
         self.batch_size = batch_size
-        # self.build_vgg()
+        # self.build_vgg16()
         # self.build_vgg_simple()
-        # self.build_simple_net()
-        self.build_net_78()
+        self.build_simple_net()
+        # self.build_net_78()
         # self.build_net_84()
 
         self.save_model()
@@ -58,7 +58,7 @@ class Vgg16BN():
         model.add(BatchNormalization())
         model.add(Dropout(p_dropout))
 
-    def build_vgg(self, ft=True):
+    def build_vgg16(self, ft=True):
         # model = self.model = Sequential()
         # model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
         model = self.model = Sequential()
@@ -105,6 +105,7 @@ class Vgg16BN():
 
     def build_simple_net(self):
         model = self.model = Sequential()
+        print("initial shape {0}".format((3,) + self.size))
         model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
 
         model.add(Conv2D(32, (3, 3), activation='relu'))
