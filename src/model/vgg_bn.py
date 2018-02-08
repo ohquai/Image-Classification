@@ -8,6 +8,7 @@ from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.normalization import BatchNormalization
+from keras import initializers
 from time import sleep
 
 vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32).reshape((3,1,1))
@@ -29,9 +30,10 @@ class Vgg16BN():
         self.batch_size = batch_size
         # self.build_vgg16()
         # self.build_vgg_simple()
-        self.build_simple_net()
+        # self.build_simple_net()
         # self.build_net_78()
         # self.build_net_84()
+        self.build_Seenta_net()
 
         self.save_model()
 
@@ -190,6 +192,37 @@ class Vgg16BN():
         model.add(Dense(512, activation='relu'))
 
         model.add(Dense(self.n_classes, activation='softmax'))
+
+        self.compile()
+
+    def build_Seenta_net(self):
+        model = self.model = Sequential()
+        print("initial shape {0}".format((3,) + self.size))
+
+        model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
+
+        model.add(ZeroPadding2D((2, 2)))
+        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.0001)))
+        # model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
+        # print(model.summary())
+
+        model.add(ZeroPadding2D((2, 2)))
+        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.01)))
+        model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        # print(model.summary())
+
+        model.add(ZeroPadding2D((2, 2)))
+        model.add(Conv2D(64, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.01)))
+        model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        # print(model.summary())
+
+        model.add(Flatten())
+        model.add(Dense(64, activation='relu', kernel_initializer=initializers.random_normal(stddev=0.1)))
+        model.add(Dense(self.n_classes, activation='softmax', kernel_initializer=initializers.random_normal(stddev=0.1)))
+
+        # if ft:
+        #     self.finetune()
 
         self.compile()
 
