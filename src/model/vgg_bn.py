@@ -9,7 +9,14 @@ from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.normalization import BatchNormalization
 from keras import initializers
+from keras.callbacks import Callback, TensorBoard
+import tensorflow as tf
 from time import sleep
+np.random.seed(1337)  # for reproducibility
+
+# 设置线程
+THREADS_NUM = 3
+tf.ConfigProto(intra_op_parallelism_threads=THREADS_NUM)
 
 vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32).reshape((3,1,1))
 # vgg_mean = np.array([123.68, 116.779, 103.939], dtype=np.float32)
@@ -196,30 +203,35 @@ class Vgg16BN():
         self.compile()
 
     def build_Seenta_net(self):
+        """
+        可用的initialization方法：random_normal(stddev=0.0001), Orthogonal(), glorot_uniform(), lecun_uniform()
+        :return:
+        """
         model = self.model = Sequential()
         print("initial shape {0}".format((3,) + self.size))
 
         model.add(Lambda(vgg_preprocess, input_shape=(3,) + self.size))
 
         model.add(ZeroPadding2D((2, 2)))
-        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.0001)))
-        # model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
+        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
         model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
         # print(model.summary())
 
         model.add(ZeroPadding2D((2, 2)))
-        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.01)))
+        model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
         model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
         # print(model.summary())
 
         model.add(ZeroPadding2D((2, 2)))
-        model.add(Conv2D(64, (5, 5), activation='relu', kernel_initializer=initializers.random_normal(stddev=0.01)))
+        model.add(Conv2D(64, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
+        model.add(Conv2D(64, (5, 5), activation='relu'))
         model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
         # print(model.summary())
 
         model.add(Flatten())
-        model.add(Dense(64, activation='relu', kernel_initializer=initializers.random_normal(stddev=0.1)))
-        model.add(Dense(self.n_classes, activation='softmax', kernel_initializer=initializers.random_normal(stddev=0.1)))
+        model.add(Dense(64, activation='relu', kernel_initializer=initializers.Orthogonal()))
+        model.add(Dense(self.n_classes, activation='softmax', kernel_initializer=initializers.Orthogonal()))
+        print(model.summary())
 
         # if ft:
         #     self.finetune()

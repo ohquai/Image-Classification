@@ -19,7 +19,55 @@ from src.data.data import read_data
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.datasets import cifar10
 from keras.utils import to_categorical
+from keras.callbacks import Callback, TensorBoard
+import tensorflow as tf
 from matplotlib import pyplot as plt
+
+
+# 构建一个记录的loss的回调函数
+class LossHistory(Callback):
+    def on_train_begin(self, logs={}):
+        self.losses = []
+
+    def on_batch_end(self, batch, logs={}):
+        self.losses.append(logs.get('loss'))
+
+
+# 构建一个自定义的TensorBoard类，专门用来记录batch中的数据变化
+class BatchTensorBoard(TensorBoard):
+    def __init__(self, log_dir='./logs',
+                 histogram_freq=0,
+                 write_graph=True,
+                 write_images=False):
+        super(BatchTensorBoard, self).__init__()
+        self.log_dir = log_dir
+        self.histogram_freq = histogram_freq
+        self.merged = None
+        self.write_graph = write_graph
+        self.write_images = write_images
+        self.batch = 0
+        self.batch_queue = set()
+
+    def on_epoch_end(self, epoch, logs=None):
+        pass
+
+    def on_batch_end(self, batch, logs=None):
+        logs = logs or {}
+
+        self.batch = self.batch + 1
+
+        for name, value in logs.items():
+            if name in ['batch', 'size']:
+                continue
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = float(value)
+            summary_value.tag = "batch_" + name
+            if (name, self.batch) in self.batch_queue:
+                continue
+            self.writer.add_summary(summary, self.batch)
+            self.batch_queue.add((name, self.batch))
+        self.writer.flush()
 
 
 def data_preprocess(x_train, y_train, x_test, y_test):
@@ -59,6 +107,7 @@ def show_model_effect(history):
 # paths
 path = 'D:/Project/cifar/cifar10/'
 model_path = path + 'models/'
+log_path = path + 'logs/'
 submission_path = path + 'submissions/sub.csv'
 
 # coefficient
@@ -87,9 +136,13 @@ info_string = "{0}x{1}_{2}epoch_{3}aug_vgg16-bn".format(img_width, img_height, n
 ckpt_fn = model_path + '{val_loss:.2f}-loss_' + info_string + '.h5'
 
 ckpt = ModelCheckpoint(filepath=ckpt_fn, monitor='val_loss', save_best_only=True, save_weights_only=True)
+tensorboard = TensorBoard(log_dir='/home/tensorflow/log/softmax/epoch')
+my_tensorboard = BatchTensorBoard(log_dir='/home/tensorflow/log/softmax/batch')
+
+
 early_stopping = EarlyStopping(monitor='val_loss', patience=2)
 history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
-# vgg.fit(train_path, valid_path, nb_trn_samples=nb_train_samples, nb_val_samples=nb_valid_samples, nb_epoch=nb_epoch, callbacks=[ckpt], aug=nb_aug)
+# history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[tensorboard, my_tensorboard])
 
 score = vgg.model.evaluate(x_test, y_test, verbose=1)
 
@@ -133,23 +186,3 @@ show_model_effect(history)
 #             print(i, '/', nb_test_samples)
 #         f.write('%s,%s\n' % (os.path.basename(image_name).replace('.jpg', ''), (pred[1])))
 #     print("Done.")
-
-# 0.25 dropout
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.9163 - acc: 0.6773
-# 50000/50000 [==============================] - 256s 5ms/step - loss: 0.9162 - acc: 0.6773 - val_loss: 0.8989 - val_acc: 0.6852
-
-# 没有 dropout
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.7824 - acc: 0.7249
-# 50000/50000 [==============================] - 256s 5ms/step - loss: 0.7823 - acc: 0.7249 - val_loss: 0.8750 - val_acc: 0.6970
-
-# 改成maxpool
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.7500 - acc: 0.7376
-# 50000/50000 [==============================] - 260s 5ms/step - loss: 0.7500 - acc: 0.7376 - val_loss: 0.8892 - val_acc: 0.6973
-
-# a more deep model(epoch6)
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.7744 - acc: 0.7281
-# 50000/50000 [==============================] - 1738s 35ms/step - loss: 0.7744 - acc: 0.7281 - val_loss: 0.6897 - val_acc: 0.7623
-
-# 78%准确率的结果
-# 49984/50000 [============================>.] - ETA: 0s - loss: 0.6131 - acc: 0.7830
-# 50000/50000 [==============================] - 568s 11ms/step - loss: 0.6131 - acc: 0.7830 - val_loss: 0.8148 - val_acc: 0.7245
