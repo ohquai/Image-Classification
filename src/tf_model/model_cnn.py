@@ -77,8 +77,8 @@ img_size_cropped = 24
 
 
 #×××××××××××××××× tensorflow构造阶段  ×××××××××××××××××××××××××
-
-#用于输入图像的占位变量
+# 输入输出进行占位变量
+# 用于输入图像的占位变量
 x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, num_channels], name='x')
 
 #用于输入图像对应标签的占位变量
