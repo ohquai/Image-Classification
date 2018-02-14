@@ -175,3 +175,8 @@ if __name__ == "__main__":
     net.train(X, y)
 
     image_transform()
+
+    a1=np.array([[1,3,4],[2,5,2]])
+    a2 = np.array([[5, 4, 6], [1, 1, 3]])
+    r1 = ConvLayer.conv2(a1, a2)
+    r2 = np.fft.ifft(np.fft.fft(a1) * np.fft.fft(a2))
