@@ -215,21 +215,24 @@ class Vgg16BN():
         model.add(ZeroPadding2D((2, 2)))
         model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
         model.add(MaxPooling2D(pool_size=(3, 3), strides=(2, 2)))
+        model.add(BatchNormalization())
         # print(model.summary())
 
         model.add(ZeroPadding2D((2, 2)))
         model.add(Conv2D(32, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
         model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        model.add(BatchNormalization())
         # print(model.summary())
 
         model.add(ZeroPadding2D((2, 2)))
         model.add(Conv2D(64, (5, 5), activation='relu', kernel_initializer=initializers.Orthogonal()))
-        model.add(Conv2D(64, (5, 5), activation='relu'))
         model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2)))
+        model.add(BatchNormalization())
         # print(model.summary())
 
         model.add(Flatten())
         model.add(Dense(64, activation='relu', kernel_initializer=initializers.Orthogonal()))
+        # model.add(BatchNormalization())
         model.add(Dense(self.n_classes, activation='softmax', kernel_initializer=initializers.Orthogonal()))
         print(model.summary())
 

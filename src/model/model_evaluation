@@ -41,3 +41,27 @@
 # 3、 - 425s 8ms/step - loss: 1.1388 - acc: 0.5956 - val_loss: 1.0901 - val_acc: 0.6136
 # 6、 - 1073s 21ms/step - loss: 0.8778 - acc: 0.6933 - val_loss: 0.8974 - val_acc: 0.6830
 # 7、 - 455s 9ms/step - loss: 0.8262 - acc: 0.7102 - val_loss: 0.9832 - val_acc: 0.6593
+
+# Seenta 修改了layer bug 之后 （采用）
+# 1、 - 416s 8ms/step - loss: 1.6152 - acc: 0.4034 - val_loss: 1.3813 - val_acc: 0.4994
+# 3、 - 492s 10ms/step - loss: 1.0820 - acc: 0.6197 - val_loss: 1.0314 - val_acc: 0.6391
+# 6、 - 420s 8ms/step - loss: 0.8348 - acc: 0.7080 - val_loss: 0.8916 - val_acc: 0.6917
+# 7、 - 424s 8ms/step - loss: 0.7788 - acc: 0.7292 - val_loss: 0.8872 - val_acc: 0.6842
+# 8、 - 425s 8ms/step - loss: 0.7353 - acc: 0.7440 - val_loss: 0.8316 - val_acc: 0.7070
+# 10、 - 418s 8ms/step - loss: 0.6634 - acc: 0.7672 - val_loss: 0.8013 - val_acc: 0.7195
+
+# Seenta的maxpooling层改为no padding（放弃）
+# 1、 0.40
+# 4、 0.58
+
+# Seenta的maxpooling层改为2*2，no padding
+# 3、 0.60
+
+# 添加BatchNormalization（非常高）
+# 1、 - 513s 10ms/step - loss: 1.5177 - acc: 0.4449 - val_loss: 1.1994 - val_acc: 0.5756
+# 3、 - 610s 12ms/step - loss: 0.8727 - acc: 0.6917 - val_loss: 0.8825 - val_acc: 0.6904
+（之前有严重的过拟合 val_acc降低到0.7以下）
+# 6、 - 482s 10ms/step - loss: 0.6267 - acc: 0.7796 - val_loss: 0.7493 - val_acc: 0.7429
+# 7、 - 480s 10ms/step - loss: 0.5721 - acc: 0.7998 - val_loss: 0.7832 - val_acc: 0.7372
+# 8、 - 484s 10ms/step - loss: 0.5303 - acc: 0.8149 - val_loss: 0.7958 - val_acc: 0.7352
+# 9、 - 494s 10ms/step - loss: 0.4906 - acc: 0.8299 - val_loss: 0.8430 - val_acc: 0.7270
