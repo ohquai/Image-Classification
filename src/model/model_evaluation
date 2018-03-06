@@ -65,3 +65,35 @@
 # 7、 - 480s 10ms/step - loss: 0.5721 - acc: 0.7998 - val_loss: 0.7832 - val_acc: 0.7372
 # 8、 - 484s 10ms/step - loss: 0.5303 - acc: 0.8149 - val_loss: 0.7958 - val_acc: 0.7352
 # 9、 - 494s 10ms/step - loss: 0.4906 - acc: 0.8299 - val_loss: 0.8430 - val_acc: 0.7270
+
+# 每层Conv层增加0.5的dropout，两个FC层之间增加dropout(待深入)
+# 1、- 496s 10ms/step - loss: 1.9898 - acc: 0.2332 - val_loss: 1.6631 - val_acc: 0.3732
+# 3、- 478s 10ms/step - loss: 1.4612 - acc: 0.4669 - val_loss: 1.2150 - val_acc: 0.5562
+# 6、- 479s 10ms/step - loss: 1.2192 - acc: 0.5683 - val_loss: 1.1075 - val_acc: 0.6066
+# 10、 - 506s 10ms/step - loss: 1.1068 - acc: 0.6170 - val_loss: 0.8930 - val_acc: 0.6870
+以10个epoch的结果来看，远没结束，acc还比valacc低，所以还需要增加epoch数
+
+# FC层不采用BN，卷积层使用
+10、 - 464s 9ms/step - loss: 0.4478 - acc: 0.8436 - val_loss: 0.7437 - val_acc: 0.7559
+最后几层在0.72-0.76徘徊
+
+# FC层中加入dropout=0.5
+- 733s 15ms/step - loss: 0.7298 - acc: 0.7507 - val_loss: 0.7702 - val_acc: 0.7346
+
+# FC层中加入dropout=0.2
+- 539s 11ms/step - loss: 0.5679 - acc: 0.8012 - val_loss: 0.7431 - val_acc: 0.7519
+
+# 使用ct_net
+- 580s 12ms/step - loss: 0.8048 - acc: 0.7185 - val_loss: 0.7560 - val_acc: 0.7356
+val_loss:0.7559989635467529
+val_acc :0.7356
+很稳定的提升，且还没达到最优
+ - 575s 12ms/step - loss: 0.6821 - acc: 0.7629 - val_loss: 0.7444 - val_acc: 0.7432
+ 基本饱和
+
+# 改为全部的2*2的maxpooling（放弃）
+- 626s 13ms/step - loss: 0.9137 - acc: 0.6696 - val_loss: 0.9093 - val_acc: 0.6838
+
+# size=5的kernel换成两个3的(15epoch)
+10\ - 968s 19ms/step - loss: 0.5989 - acc: 0.7928 - val_loss: 0.6218 - val_acc: 0.7881
+15\ - 874s 17ms/step - loss: 0.4950 - acc: 0.8289 - val_loss: 0.5950 - val_acc: 0.7985

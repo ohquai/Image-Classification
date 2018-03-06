@@ -13,6 +13,7 @@ import os
 import numpy as np
 
 from glob import glob
+from time import sleep
 from shutil import copyfile
 from src.model.vgg_bn import Vgg16BN
 from src.data.data import read_data
@@ -72,8 +73,10 @@ class BatchTensorBoard(TensorBoard):
 
 def data_preprocess(x_train, y_train, x_test, y_test):
     # zero-scale for image
-    x_train = x_train.astype('float32') / 255
-    x_test = x_test.astype('float32') / 255
+    # x_train = x_train.astype('float32') / 255
+    # x_test = x_test.astype('float32') / 255
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
 
     # Convert class vectors to binary class matrices.
     y_train = to_categorical(y_train, n_classes)
@@ -112,7 +115,7 @@ submission_path = path + 'submissions/sub.csv'
 
 # coefficient
 n_classes = 10
-nb_epoch = 10
+nb_epoch = 15
 batch_size = 64
 nb_aug = 5
 lr = 0.001
@@ -126,6 +129,7 @@ img_width, img_height = 32, 32
 
 # data pre-process, include scale, categorical etc.
 x_train, y_train, x_test, y_test = data_preprocess(x_train, y_train, x_test, y_test)
+x_mean = np.mean(np.mean(np.mean(x_train, axis=0), axis=1), axis=1)
 
 # get model structure
 vgg = Vgg16BN(size=(img_width, img_height), n_classes=n_classes, batch_size=batch_size, lr=lr)
@@ -136,12 +140,15 @@ info_string = "{0}x{1}_{2}epoch_{3}aug_vgg16-bn".format(img_width, img_height, n
 ckpt_fn = model_path + '{val_loss:.2f}-loss_' + info_string + '.h5'
 
 ckpt = ModelCheckpoint(filepath=ckpt_fn, monitor='val_loss', save_best_only=True, save_weights_only=True)
+#将loss ，acc， val_loss ,val_acc记录tensorboard
+tensorboard = TensorBoard(log_dir=log_path, histogram_freq=1,write_graph=True, batch_size=batch_size)
+
 tensorboard = TensorBoard(log_dir='/home/tensorflow/log/softmax/epoch')
 my_tensorboard = BatchTensorBoard(log_dir='/home/tensorflow/log/softmax/batch')
 
 
 early_stopping = EarlyStopping(monitor='val_loss', patience=2)
-history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[ckpt])
+history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[tensorboard])
 # history = vgg.model.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=nb_epoch, verbose=1, validation_data=(x_test, y_test), callbacks=[tensorboard, my_tensorboard])
 
 score = vgg.model.evaluate(x_test, y_test, verbose=1)
