@@ -97,3 +97,5 @@ val_acc :0.7356
 # size=5的kernel换成两个3的(15epoch)
 10\ - 968s 19ms/step - loss: 0.5989 - acc: 0.7928 - val_loss: 0.6218 - val_acc: 0.7881
 15\ - 874s 17ms/step - loss: 0.4950 - acc: 0.8289 - val_loss: 0.5950 - val_acc: 0.7985
+
+# 将kernel size从32 32 64换成64 128 256(计算量太大)
